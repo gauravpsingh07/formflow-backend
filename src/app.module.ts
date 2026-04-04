@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { FormsModule } from './forms/forms.module';
 import { PublicModule } from './public/public.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { PublicModule } from './public/public.module';
     AuthModule,
     FormsModule,
     PublicModule,
+    WebhooksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

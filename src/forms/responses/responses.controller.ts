@@ -14,9 +14,9 @@ export class ResponsesController {
     @Param('formId') formId: string,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
+    @Query('query') query = '',
     @Req() req: any,
   ) {
-    // If your JWT payload uses `sub`, use: const userId = req.user.sub;
     const userId = req.user.sub;
 
     return this.responses.listResponses({
@@ -24,12 +24,12 @@ export class ResponsesController {
       userId,
       page: Number(page),
       limit: Number(limit),
+      query,
     });
   }
 
   @Get(':responseId')
   async detail(@Param('formId') formId: string, @Param('responseId') responseId: string, @Req() req: any) {
-    // If your JWT payload uses `sub`, use: const userId = req.user.sub;
     const userId = req.user.sub;
 
     return this.responses.getResponseDetail({ formId, responseId, userId });

@@ -27,8 +27,9 @@ export class ResponsesService {
     userId: string;
     page: number;
     limit: number;
+    query?: string;
   }) {
-    const { formId, userId, page, limit } = params;
+    const { formId, userId, page, limit, query } = params;
 
     await this.assertOwner(formId, userId);
 
@@ -36,10 +37,27 @@ export class ResponsesService {
     const safePage = Math.max(page, 1);
     const skip = (safePage - 1) * safeLimit;
 
+    const trimmedQuery = query?.trim();
+    const where = {
+      formId,
+      ...(trimmedQuery
+        ? {
+            answers: {
+              some: {
+                value: {
+                  contains: trimmedQuery,
+                  mode: 'insensitive' as const,
+                },
+              },
+            },
+          }
+        : {}),
+    };
+
     const [total, items] = await Promise.all([
-      this.prisma.formResponse.count({ where: { formId } }),
+      this.prisma.formResponse.count({ where }),
       this.prisma.formResponse.findMany({
-        where: { formId },
+        where,
         orderBy: { createdAt: 'desc' },
         skip,
         take: safeLimit,
@@ -47,6 +65,7 @@ export class ResponsesService {
           id: true,
           formId: true,
           createdAt: true,
+          durationMs: true,
           _count: { select: { answers: true } }, // answersCount
         },
       }),
@@ -60,6 +79,7 @@ export class ResponsesService {
         id: r.id,
         formId: r.formId,
         createdAt: r.createdAt,
+        durationMs: r.durationMs,
         answersCount: r._count.answers,
       })),
     };
@@ -80,6 +100,7 @@ export class ResponsesService {
         id: true,
         formId: true,
         createdAt: true,
+        durationMs: true,
         answers: {
           orderBy: { id: 'asc' },
           select: {
@@ -114,6 +135,7 @@ export class ResponsesService {
       id: response.id,
       formId: response.formId,
       createdAt: response.createdAt,
+      durationMs: response.durationMs,
       answers: answers.map((a) => ({
         id: a.id,
         fieldId: a.fieldId,

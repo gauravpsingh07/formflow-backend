@@ -22,6 +22,18 @@ enum FieldType {
   DATE
 }
 
+enum WebhookEventType {
+  RESPONSE_CREATED
+  FORM_PUBLISHED
+  FORM_UNPUBLISHED
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -29,7 +41,8 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  forms Form[]
+  forms    Form[]
+  webhooks WebhookEndpoint[]
 }
 
 model Form {
@@ -81,7 +94,8 @@ model FormResponse {
   formId String
   form   Form   @relation(fields: [formId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
+  durationMs Int?
+  createdAt  DateTime @default(now())
 
   answers FormAnswer[]
 
@@ -100,4 +114,39 @@ model FormAnswer {
 
   @@index([responseId])
   @@index([fieldId])
+}
+
+model WebhookEndpoint {
+  id        String             @id @default(cuid())
+  ownerId   String
+  owner     User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  url       String
+  secret    String
+  enabled   Boolean            @default(true)
+  events    WebhookEventType[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  deliveries WebhookDelivery[]
+
+  @@index([ownerId])
+}
+
+model WebhookDelivery {
+  id         String                @id @default(cuid())
+  endpointId String
+  endpoint   WebhookEndpoint       @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  eventType  WebhookEventType
+  payload    Json
+  attempt    Int                   @default(1)
+  status     WebhookDeliveryStatus @default(PENDING)
+  statusCode Int?
+  lastError  String?
+  nextRetryAt DateTime?
+  deliveredAt DateTime?
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+
+  @@index([endpointId, createdAt])
+  @@index([status, nextRetryAt])
 }

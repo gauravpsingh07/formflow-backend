@@ -1,9 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 
 @Injectable()
 export class PublicService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly webhooks: WebhooksService,
+  ) {}
 
   async getPublicFormBySlug(slug: string) {
     const form = await this.prisma.form.findFirst({
@@ -47,30 +51,39 @@ export class PublicService {
       where: { slug, status: 'PUBLISHED' },
       select: {
         id: true,
+        ownerId: true,
+        title: true,
         fields: {
-          select: { id: true, required: true, type: true },
+          select: {
+            id: true,
+            label: true,
+            required: true,
+            type: true,
+            options: true,
+          },
         },
       },
     });
 
     if (!form) throw new NotFoundException('Form not found');
 
-    // required validation
     for (const f of form.fields) {
-      if (!f.required) continue;
       const v = answersObj[f.id];
-      const empty =
-        v === undefined ||
-        v === null ||
-        (typeof v === 'string' && v.trim() === '') ||
-        (Array.isArray(v) && v.length === 0);
+      const empty = this.isEmpty(v);
+      if (!f.required && empty) continue;
       if (empty) throw new BadRequestException(`Missing required field: ${f.id}`);
+
+      this.validateFieldValue(f, v);
     }
 
-    // Create response + answers in a transaction
+    const durationMs = this.getDurationMs(body?.meta?.startedAt);
+
     const result = await this.prisma.$transaction(async (tx) => {
       const response = await tx.formResponse.create({
-        data: { formId: form.id },
+        data: {
+          formId: form.id,
+          durationMs,
+        },
         select: { id: true, createdAt: true },
       });
 
@@ -91,6 +104,59 @@ export class PublicService {
       return { ok: true, responseId: response.id };
     });
 
+    void this.webhooks.emitForOwner(form.ownerId, 'RESPONSE_CREATED', {
+      formId: form.id,
+      formTitle: form.title,
+      responseId: result.responseId,
+      submittedAt: new Date().toISOString(),
+    });
+
     return result;
+  }
+
+  private isEmpty(value: unknown) {
+    return (
+      value === undefined ||
+      value === null ||
+      (typeof value === 'string' && value.trim() === '') ||
+      (Array.isArray(value) && value.length === 0)
+    );
+  }
+
+  private getDurationMs(startedAt: unknown) {
+    if (typeof startedAt !== 'string') return null;
+
+    const started = new Date(startedAt);
+    if (Number.isNaN(started.getTime())) return null;
+
+    const duration = Date.now() - started.getTime();
+    if (duration <= 0) return null;
+
+    return duration;
+  }
+
+  private validateFieldValue(
+    field: { type: string; label: string; options?: unknown },
+    value: unknown,
+  ) {
+    if (this.isEmpty(value)) return;
+
+    if (field.type === 'NUMBER' && Number.isNaN(Number(value))) {
+      throw new BadRequestException(`Field "${field.label}" must be a number`);
+    }
+
+    if (field.type === 'EMAIL') {
+      const email = String(value);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new BadRequestException(`Field "${field.label}" must be an email`);
+      }
+    }
+
+    if (field.type === 'SELECT' || field.type === 'RADIO') {
+      const options = Array.isArray(field.options) ? field.options : [];
+      if (options.length && !options.includes(String(value))) {
+        throw new BadRequestException(`Field "${field.label}" has an invalid option`);
+      }
+    }
   }
 }
