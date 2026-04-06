@@ -56,3 +56,7 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /generated/prisma
+
+# Kubernetes secrets
+k8s/secret.local.yaml
+k8s/secret.generated.yaml

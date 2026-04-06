@@ -4,7 +4,10 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 
-ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
+# Prisma generate needs DATABASE_URL at build time because prisma.config.ts validates it.
+# This is a non-sensitive placeholder and must be overridden at runtime.
+ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public"
+ENV DATABASE_URL=$DATABASE_URL
 RUN npx prisma generate
 RUN npm run build
 

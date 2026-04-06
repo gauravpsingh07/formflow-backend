@@ -153,6 +153,31 @@ npm run build
 npm test -- --runInBand
 ```
 
+## Kubernetes Secrets
+
+Real Kubernetes secrets are not stored in this repository.
+
+Files in `k8s/` now follow this rule:
+
+- `k8s/secret.example.yaml` is a safe template only
+- `k8s/secret.yaml` contains placeholders only and must be replaced before use
+- local secret manifests such as `k8s/secret.local.yaml` should stay untracked
+
+Recommended approach for local Kubernetes:
+
+```bash
+kubectl -n formflow create secret generic formflow-backend-secrets \
+  --from-literal=DATABASE_URL="postgresql://<db-user>:<db-password>@<db-host>:5432/<db-name>?schema=public" \
+  --from-literal=REDIS_URL="redis://<redis-host>:6379" \
+  --from-literal=JWT_ACCESS_SECRET="<generate-a-long-random-secret>"
+```
+
+If you previously committed real credentials, rotate them immediately:
+
+- database password / connection string
+- Redis credentials if applicable
+- JWT signing secret
+
 ## Local Testing Flow
 
 1. Start Docker Desktop.
@@ -169,3 +194,4 @@ npm test -- --runInBand
 - If auth returns a `500`, the most common cause is Postgres not running.
 - If `docker compose up -d` fails with a `dockerDesktopLinuxEngine` pipe error, Docker Desktop is not ready yet.
 - Webhook retry support is implemented at the API layer; for local use, trigger it through the internal job endpoint.
+- Treat any secret ever committed to git as compromised and rotate it before reuse.
