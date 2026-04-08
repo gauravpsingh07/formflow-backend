@@ -1,4 +1,12 @@
-import { IsArray, IsBoolean, IsIn, IsOptional, IsString, IsUrl, Length } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsIn,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Length,
+} from 'class-validator';
 
 export const WEBHOOK_EVENT_NAMES = [
   'response.created',

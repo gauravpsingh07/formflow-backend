@@ -1,6 +1,9 @@
 import { Global, Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
-import { WebhooksController, WebhooksJobsController } from './webhooks.controller';
+import {
+  WebhooksController,
+  WebhooksJobsController,
+} from './webhooks.controller';
 import { WebhooksService } from './webhooks.service';
 
 @Global()

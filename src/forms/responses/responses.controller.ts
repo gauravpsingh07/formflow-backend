@@ -29,7 +29,11 @@ export class ResponsesController {
   }
 
   @Get(':responseId')
-  async detail(@Param('formId') formId: string, @Param('responseId') responseId: string, @Req() req: any) {
+  async detail(
+    @Param('formId') formId: string,
+    @Param('responseId') responseId: string,
+    @Req() req: any,
+  ) {
     const userId = req.user.sub;
 
     return this.responses.getResponseDetail({ formId, responseId, userId });

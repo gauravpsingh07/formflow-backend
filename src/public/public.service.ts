@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 
@@ -44,7 +48,9 @@ export class PublicService {
   async submitBySlug(slug: string, body: any) {
     const answersObj = body?.answers;
     if (!answersObj || typeof answersObj !== 'object') {
-      throw new BadRequestException('Invalid payload: expected { answers: { [fieldId]: value } }');
+      throw new BadRequestException(
+        'Invalid payload: expected { answers: { [fieldId]: value } }',
+      );
     }
 
     const form = await this.prisma.form.findFirst({
@@ -71,7 +77,8 @@ export class PublicService {
       const v = answersObj[f.id];
       const empty = this.isEmpty(v);
       if (!f.required && empty) continue;
-      if (empty) throw new BadRequestException(`Missing required field: ${f.id}`);
+      if (empty)
+        throw new BadRequestException(`Missing required field: ${f.id}`);
 
       this.validateFieldValue(f, v);
     }
@@ -148,14 +155,18 @@ export class PublicService {
     if (field.type === 'EMAIL') {
       const email = String(value);
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        throw new BadRequestException(`Field "${field.label}" must be an email`);
+        throw new BadRequestException(
+          `Field "${field.label}" must be an email`,
+        );
       }
     }
 
     if (field.type === 'SELECT' || field.type === 'RADIO') {
       const options = Array.isArray(field.options) ? field.options : [];
       if (options.length && !options.includes(String(value))) {
-        throw new BadRequestException(`Field "${field.label}" has an invalid option`);
+        throw new BadRequestException(
+          `Field "${field.label}" has an invalid option`,
+        );
       }
     }
   }

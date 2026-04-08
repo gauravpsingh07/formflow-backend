@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 type AnalyticsPoint = {
@@ -74,7 +78,9 @@ export class AnalyticsService {
       let responseCount = 0;
 
       for (const response of responses) {
-        const answer = response.answers.find((item) => item.fieldId === field.id);
+        const answer = response.answers.find(
+          (item) => item.fieldId === field.id,
+        );
         const normalized = this.normalizeAnswerValue(answer?.value);
         if (!normalized) continue;
 
@@ -107,8 +113,9 @@ export class AnalyticsService {
       );
 
       const answeredRequiredCount = requiredFieldIds.size
-        ? [...requiredFieldIds].filter((fieldId) => answeredFieldIds.has(fieldId))
-            .length
+        ? [...requiredFieldIds].filter((fieldId) =>
+            answeredFieldIds.has(fieldId),
+          ).length
         : answeredFieldIds.size;
 
       completionAccumulator += denominator

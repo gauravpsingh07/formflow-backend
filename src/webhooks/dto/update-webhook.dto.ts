@@ -1,4 +1,12 @@
-import { IsArray, IsBoolean, IsIn, IsOptional, IsString, IsUrl, Length } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsIn,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Length,
+} from 'class-validator';
 import { WEBHOOK_EVENT_NAMES } from './create-webhook.dto';
 
 export class UpdateWebhookDto {

@@ -32,7 +32,11 @@ export class WebhooksController {
   }
 
   @Patch(':id')
-  update(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateWebhookDto) {
+  update(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateWebhookDto,
+  ) {
     return this.webhooks.update(req.user.sub, id, dto);
   }
 

@@ -35,7 +35,11 @@ export class FormsController {
   }
 
   @Patch(':id')
-  updateOne(@Param('id') id: string, @Req() req: any, @Body() dto: UpdateFormDto) {
+  updateOne(
+    @Param('id') id: string,
+    @Req() req: any,
+    @Body() dto: UpdateFormDto,
+  ) {
     return this.formsService.updateOne(req.user.sub, id, dto);
   }
 

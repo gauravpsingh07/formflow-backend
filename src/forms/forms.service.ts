@@ -72,11 +72,11 @@ export class FormsService {
 
     const title = dto.title?.trim();
     const description =
-      dto.description === undefined ? undefined : dto.description.trim() || null;
-    const slug =
-      dto.slug === undefined
+      dto.description === undefined
         ? undefined
-        : slugify(dto.slug) || 'untitled-form';
+        : dto.description.trim() || null;
+    const slug =
+      dto.slug === undefined ? undefined : slugify(dto.slug) || 'untitled-form';
 
     try {
       return await this.prisma.form.update({
